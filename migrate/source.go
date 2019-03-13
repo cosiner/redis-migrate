@@ -3,6 +3,7 @@ package migrate
 type SourceKeyType string
 
 const (
+	SourceKeyTypeSkip   SourceKeyType = ""
 	SourceKeyTypeString SourceKeyType = "string"
 	SourceKeyTypeHash   SourceKeyType = "hash"
 	SourceKeyTypeList   SourceKeyType = "list"

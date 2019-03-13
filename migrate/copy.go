@@ -88,6 +88,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 		switch typ {
 		default:
 			recorder.Error("unsupported key type", err, "type", typ, "key", key.Key())
+		case SourceKeyTypeSkip:
 		case SourceKeyTypeString:
 			val, err := src.Get(key)
 			if err != nil {
