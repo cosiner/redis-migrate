@@ -85,8 +85,8 @@ func (k keyPatternFilteredKey) Type() (SourceKeyType, error) {
 
 func (k keyPatternIterator) Next() (SourceKey, error) {
 	key, err := k.SourceKeyIterator.Next()
-	if err != nil {
-		return nil, err
+	if key == nil || err != nil {
+		return key, err
 	}
 	return keyPatternFilteredKey{
 		SourceKey: key,
