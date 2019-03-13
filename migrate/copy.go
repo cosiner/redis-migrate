@@ -11,7 +11,7 @@ type CopyRecorder interface {
 	Error(message string, err error, kvs ...interface{})
 
 	Finish()
-	Key(typ SourceKeyType, key string)
+	Key(typ SourceKeyType, key string, item []string)
 }
 
 type stdCopyRecorder struct {
@@ -54,8 +54,12 @@ func (c *stdCopyRecorder) Finish() {
 	c.flush()
 }
 
-func (c *stdCopyRecorder) Key(typ SourceKeyType, key string) {
-	_, _ = fmt.Fprintf(&c.buf, "start: %s: %s\n", typ, key)
+func (c *stdCopyRecorder) Key(typ SourceKeyType, key string, item []string) {
+	if len(item) == 0 {
+		_, _ = fmt.Fprintf(&c.buf, "start: %s: %s\n", typ, key)
+	} else {
+		_, _ = fmt.Fprintf(&c.buf, "start: %s: %s->%s\n", typ, key, item[0])
+	}
 	c.flush()
 }
 
@@ -84,7 +88,6 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 			continue
 		}
 
-		recorder.Key(typ, key.Key())
 		switch typ {
 		default:
 			recorder.Error("unsupported key type", err, "type", typ, "key", key.Key())
@@ -94,6 +97,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 			if err != nil {
 				recorder.Error("get string key value failed", err, "type", typ, "key", key.Key())
 			} else {
+				recorder.Key(typ, key.Key(), nil)
 				err = dst.Set(key.Key(), val)
 				if err != nil {
 					recorder.Error("set string key value failed", err, "type", typ, "key", key.Key())
@@ -105,6 +109,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 				recorder.Error("get hash items failed", err, "type", typ, "key", key.Key())
 			} else {
 				for _, kv := range items {
+					recorder.Key(typ, key.Key(), []string{kv.Key})
 					err = dst.HSet(key.Key(), kv.Key, kv.Value)
 					if err != nil {
 						recorder.Error("set hash item failed", err, "type", typ, "key", key.Key(), "field", kv.Key)
@@ -117,6 +122,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 				recorder.Error("get list items failed", err, "type", typ, "key", key.Key())
 			} else {
 				for _, item := range items {
+					recorder.Key(typ, key.Key(), []string{item})
 					err = dst.LPush(key.Key(), item)
 					if err != nil {
 						recorder.Error("push list item failed", err, "type", typ, "key", key.Key(), "item", item)
@@ -129,6 +135,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 				recorder.Error("get set members failed", err, "type", typ, "key", key.Key())
 			} else {
 				for _, member := range members {
+					recorder.Key(typ, key.Key(), []string{member})
 					err = dst.SAdd(key.Key(), member)
 					if err != nil {
 						recorder.Error("add set member failed", err, "type", typ, "key", key.Key(), "member", member)
@@ -141,6 +148,7 @@ func Copy(src Source, dst Destination, recorder CopyRecorder) {
 				recorder.Error("get zset members failed", err, "type", typ, "key", key.Key())
 			} else {
 				for _, member := range members {
+					recorder.Key(typ, key.Key(), []string{member.Key})
 					err = dst.ZAdd(key.Key(), member.Key, member.Score)
 					if err != nil {
 						recorder.Error("add zset member failed", err, "type", typ, "key", key.Key(), "member", member)

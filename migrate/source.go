@@ -1,5 +1,9 @@
 package migrate
 
+import (
+	"regexp"
+)
+
 type SourceKeyType string
 
 const (
@@ -41,6 +45,96 @@ type Source interface {
 	LItems(k SourceKey) ([]string, error)
 	SMembers(k SourceKey) ([]string, error)
 	ZMembers(k SourceKey) ([]SourceZSetMember, error)
+}
+
+type keyPatternIterator struct {
+	SourceKeyIterator
+	s *keyPatternSource
+}
+
+type keyPatternFilteredKey struct {
+	SourceKey
+
+	s *keyPatternSource
+}
+
+func (k keyPatternFilteredKey) Type() (SourceKeyType, error) {
+	t, err := k.SourceKey.Type()
+	if err != nil || t == SourceKeyTypeSkip {
+		return t, err
+	}
+
+	key := k.Key()
+	if len(k.s.excludes) > 0 {
+		for _, e := range k.s.excludes {
+			if e.MatchString(key) {
+				return SourceKeyTypeSkip, nil
+			}
+		}
+	}
+	if len(k.s.includes) > 0 {
+		for _, i := range k.s.includes {
+			if i.MatchString(key) {
+				return t, nil
+			}
+		}
+		return SourceKeyTypeSkip, nil
+	}
+	return t, nil
+}
+
+func (k keyPatternIterator) Next() (SourceKey, error) {
+	key, err := k.SourceKeyIterator.Next()
+	if err != nil {
+		return nil, err
+	}
+	return keyPatternFilteredKey{
+		SourceKey: key,
+		s:         k.s,
+	}, nil
+}
+
+type keyPatternSource struct {
+	includes []*regexp.Regexp
+	excludes []*regexp.Regexp
+	Source
+}
+
+func NewKeyPatternSource(source Source, includes, excludes []string) (Source, error) {
+	if len(includes) == 0 && len(excludes) == 0 {
+		return source, nil
+	}
+	parseRegexps := func(regexps []string) ([]*regexp.Regexp, error) {
+		rs := make([]*regexp.Regexp, 0, len(regexps))
+		for _, s := range regexps {
+			r, err := regexp.Compile(s)
+			if err != nil {
+				return nil, err
+			}
+			rs = append(rs, r)
+		}
+		return rs, nil
+	}
+	k := keyPatternSource{
+		Source: source,
+	}
+	var err error
+	k.includes, err = parseRegexps(includes)
+	if err != nil {
+		return nil, err
+	}
+	k.excludes, err = parseRegexps(excludes)
+	if err != nil {
+		return nil, err
+	}
+	return &k, nil
+}
+
+func (s *keyPatternSource) Iterator() SourceKeyIterator {
+	return keyPatternIterator{
+		SourceKeyIterator: s.Source.Iterator(),
+		s:                 s,
+	}
 }
 
 type KeyValueIterator interface {
