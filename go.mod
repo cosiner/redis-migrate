@@ -1,4 +1,4 @@
-module github.com/cosiner/redis_migrate
+module github.com/cosiner/redis-migrate
 
 require (
 	github.com/cosiner/flag v0.3.1

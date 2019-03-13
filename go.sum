@@ -3,6 +3,7 @@ github.com/cosiner/flag v0.3.1 h1:tH6nvWKQpE4Po332wlLKb6dHzPZjlmjjvW2gvnZeCxw=
 github.com/cosiner/flag v0.3.1/go.mod h1:LI+VTFCMaFTuRo2IcvG4Dg3ylpJm9MsEhEzsx1PAyzA=
 github.com/cosiner/golog v0.0.1 h1:8QKtee3EiuFaAy+P2dOTGtxi60fdDVaUfZ8TioU/JCI=
 github.com/cosiner/golog v0.0.1/go.mod h1:c+1GFz0IPoZkoQzZJBX8RdshQSzFTUfko2hEoGMop7w=
+github.com/cosiner/redis-migrate v0.0.0-20190312160824-08bbf095cd2d h1:BgsgxMeRM2qjENw4RmzOmT7M6MASm9exUHuIFyg4cGU=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-redis/redis v6.15.2+incompatible h1:9SpNVG76gr6InJGxoZ6IuuxaCOQwDAhzyXg+Bs+0Sb4=
 github.com/go-redis/redis v6.15.2+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=

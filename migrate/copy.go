@@ -1,4 +1,4 @@
-package redis_migrate
+package migrate
 
 import (
 	"bytes"
