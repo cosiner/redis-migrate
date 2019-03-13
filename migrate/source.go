@@ -97,7 +97,7 @@ func (k keyPatternIterator) Next() (SourceKey, error) {
 type keyPatternSource struct {
 	includes []*regexp.Regexp
 	excludes []*regexp.Regexp
-	Source
+	src      Source
 }
 
 func NewKeyPatternSource(source Source, includes, excludes []string) (Source, error) {
@@ -116,7 +116,7 @@ func NewKeyPatternSource(source Source, includes, excludes []string) (Source, er
 		return rs, nil
 	}
 	k := keyPatternSource{
-		Source: source,
+		src: source,
 	}
 	var err error
 	k.includes, err = parseRegexps(includes)
@@ -130,11 +130,40 @@ func NewKeyPatternSource(source Source, includes, excludes []string) (Source, er
 	return &k, nil
 }
 
+func (s *keyPatternSource) Close() error {
+	return s.src.Close()
+}
+
 func (s *keyPatternSource) Iterator() SourceKeyIterator {
 	return keyPatternIterator{
-		SourceKeyIterator: s.Source.Iterator(),
+		SourceKeyIterator: s.src.Iterator(),
 		s:                 s,
 	}
+}
+
+func (s *keyPatternSource) Get(k SourceKey) ([]byte, error) {
+	fk, _ := k.(keyPatternFilteredKey)
+	return s.src.Get(fk.SourceKey)
+}
+
+func (s *keyPatternSource) HItems(k SourceKey) ([]SourceHashItem, error) {
+	fk, _ := k.(keyPatternFilteredKey)
+	return s.src.HItems(fk.SourceKey)
+}
+
+func (s *keyPatternSource) LItems(k SourceKey) ([]string, error) {
+	fk, _ := k.(keyPatternFilteredKey)
+	return s.src.LItems(fk.SourceKey)
+}
+
+func (s *keyPatternSource) SMembers(k SourceKey) ([]string, error) {
+	fk, _ := k.(keyPatternFilteredKey)
+	return s.src.SMembers(fk.SourceKey)
+}
+
+func (s *keyPatternSource) ZMembers(k SourceKey) ([]SourceZSetMember, error) {
+	fk, _ := k.(keyPatternFilteredKey)
+	return s.src.ZMembers(fk.SourceKey)
 }
 
 type KeyValueIterator interface {
